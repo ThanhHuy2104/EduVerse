@@ -1,38 +1,43 @@
-# Dependencies
+﻿# Thư viện cài đặt (giữ package.json và package-lock.json)
 node_modules/
 
-# Local environment variables (keep the shared template)
+# Biến môi trường và thông tin bí mật
 .env
 .env.*
 !.env.example
 
-# Local certificates and private keys
-certs/
+# Chứng chỉ và khóa dùng cục bộ
 *.pem
 *.key
 *.p12
 *.pfx
 
-# Logs
+# Log khi chạy ứng dụng
 logs/
 *.log
 
-# Build output and test coverage
+# Kết quả build và báo cáo kiểm thử
 dist/
 build/
 coverage/
 .nyc_output/
 
-# Cache and temporary files
+# Cache và file tạm
 .cache/
+.npm/
+.eslintcache
+.node_repl_history
 tmp/
 temp/
 *.tmp
-
-# Editor and OS files
-.vscode/
-.idea/
-.DS_Store
-Thumbs.db
 *.swp
 *.swo
+
+# Cấu hình IDE riêng của từng máy
+.vscode/
+.idea/
+
+# File do hệ điều hành tạo
+.DS_Store
+Thumbs.db
+Desktop.ini

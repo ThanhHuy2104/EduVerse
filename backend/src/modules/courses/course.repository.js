@@ -18,3 +18,6 @@ export const createSection = async () => {};
 
 // Thêm bài giảng video vào chương.
 export const createLesson = async () => {};
+
+// Truy vấn video bài giảng và dữ liệu phục vụ kiểm tra quyền xem.
+export const getLessonVideo = async () => {};

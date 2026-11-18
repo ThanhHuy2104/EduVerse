@@ -2,7 +2,7 @@ import express from 'express';
 import * as authController from './auth.controller.js';
 import { validate } from '../../middlewares/validate.middleware.js';
 import { signUpSchema, signInSchema } from '../../validators/auth.schema.js';
-import { authenticate } from '../../middlewares/auth.middleware.js';
+import { protectedAuth } from '../../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
@@ -19,6 +19,6 @@ router.post('/refresh', authController.refresh);
 router.post('/logout', authController.logout);
 
 // Lấy thông tin người dùng đang đăng nhập. Quyền: người dùng / quản trị viên.
-router.get('/me', authenticate, authController.me);
+router.get('/me', protectedAuth, authController.me);
 
 export default router;

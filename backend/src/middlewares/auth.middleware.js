@@ -1,35 +1,56 @@
-import jwt from 'jsonwebtoken';
-import { AppError } from '../utils/appError.util.js';
+﻿import { verifyAccessToken } from '../utils/jwt.util.js';
 
-// Đọc và xác minh access token trong header Authorization: Bearer <token>.
-export const authenticate = (req, res, next) => {
-    const authorization = req.get('Authorization');
-    const match = authorization?.match(/^Bearer\s+(\S+)$/i);
+import db from '../config/db.js';
 
-    if (!match) {
-        return next(new AppError('Vui lòng đăng nhập', 401));
-    }
-
+export const protectedAuth = async (req, res, next) => {
     try {
-        const payload = jwt.verify(match[1], process.env.ACCESS_TOKEN_SECRET, {
-            algorithms: ['HS256'],
-        });
+        // Lấy token từ header
+        const authHeader = req.headers['authorization']
+        const token = authHeader && authHeader.split(' ')[1];
 
-        if (!Number.isInteger(payload.userId) || payload.userId <= 0) {
-            return next(new AppError('Access token không hợp lệ', 401));
+        if(!token) {
+            return res.status(401).json({message: "Không tìm thấy access token!!!"})
+        }
+        // Xác minh token hợp lệ bằng utility
+        let decodedUser;
+        try {
+            decodedUser = verifyAccessToken(token);
+        } catch (err) {
+            console.error(err)
+            return res.status(401).json({message: "Access token hết hạn hoặc không đúng"})
         }
 
-        // ID lấy từ token đã xác minh, không lấy từ body hoặc query của client.
-        req.userId = payload.userId;
+        // Tìm user
+        const [user] = await db.execute(
+            `SELECT id, role, full_name AS fullName, email FROM users WHERE id = ?`,
+            [decodedUser.userId]
+        )
+
+        if(user.length === 0) {
+            return res.status(404).json({message: "Người dùng không tồn tại!!!"})
+        }
+        // Trả user về trong req
+        console.log('Thành công')
+        req.user = user[0]
+        req.userId = user[0].id
+        next()
+
     } catch (error) {
-        if (error instanceof jwt.TokenExpiredError) {
-            return next(new AppError('Access token đã hết hạn, vui lòng đăng nhập lại', 401));
-        }
-        if (error instanceof jwt.JsonWebTokenError || error instanceof jwt.NotBeforeError) {
-            return next(new AppError('Access token không hợp lệ', 401));
-        }
-        return next(error);
+        console.error('Lỗi xác minh jwt!!!', error)
+        return res.status(500).json({message: "Lỗi hệ thống"})
     }
+}
 
-    return next();
-};
+export const adminRole = (req, res, next) => {
+    try {
+        // Kiểm tra xem user có phải admin không
+        if (req.user.role === 'ADMIN') {
+            console.log('Đây là admin');
+            return next();
+        }
+        return res.status(403).json({message: "Bạn không có quyền truy cập"});
+    } catch (error) {
+        console.error('Lỗi xác minh roleId!!!', error)
+        return res.status(500).json({message: "Lỗi hệ thống"})
+    }
+}

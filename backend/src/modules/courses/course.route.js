@@ -1,5 +1,6 @@
 import express from 'express';
 import * as courseController from './course.controller.js';
+import { protectedAuth } from '../../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
@@ -23,6 +24,9 @@ router.post('/:courseId/sections', courseController.createSection);
 
 // Thêm bài giảng video vào chương. Quyền: chủ khóa học / quản trị viên.
 router.post('/sections/:sectionId/lessons', courseController.createLesson);
+
+// Lấy video bài giảng. Cần đăng nhập; kiểm tra quyền mua sẽ được triển khai trong service.
+router.get('/lessons/:lessonId/video', protectedAuth, courseController.getLessonVideo);
 
 export default router;
 

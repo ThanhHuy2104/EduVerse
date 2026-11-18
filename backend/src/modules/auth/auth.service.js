@@ -1,85 +1,106 @@
-import * as authRepository from './auth.repository.js';
-import {AppError} from '../../utils/appError.util.js';
-import bycrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
-import 'dotenv/config';
+import * as authRepository from "./auth.repository.js";
+import { AppError } from "../../utils/appError.util.js";
+import bycrypt from "bcrypt";
+import { signAccessToken } from "../../utils/jwt.util.js";
+import crypto from "crypto";
+import "dotenv/config";
 
 // Xử lý nghiệp vụ đăng ký tài khoản.
 export const signup = async ({ email, password, fullName }) => {
-    const existing = await authRepository.findUserByEmail(email);
+  const existing = await authRepository.findUserByEmail(email);
 
-    if (existing) {
-        throw new AppError('Email đã được sử dụng', 400);
-    }
+  if (existing) {
+    throw new AppError("Email đã được sử dụng", 409);
+  }
 
-    const hashedPassword = await bycrypt.hash(password, 10);
-    const userId = await authRepository.createUser({ email, password: hashedPassword, fullName });
+  const hashedPassword = await bycrypt.hash(password, 10);
+  try {
+    const userId = await authRepository.createUser({
+      email,
+      password: hashedPassword,
+      fullName,
+    });
 
     return { userId, email, fullName };
+  } catch (error) {
+    // Hai request có thể cùng vượt qua bước kiểm tra email; DB sẽ chặn bản ghi trùng.
+    if (error.code === 'ER_DUP_ENTRY') {
+      throw new AppError("Email đã được sử dụng", 409);
+    }
+    throw error;
+  }
 };
 
 // Xử lý nghiệp vụ đăng nhập.
-export const signin = async ({email, password}) => {
-    const user = await authRepository.findUserByEmail(email);
+export const signin = async ({ email, password }) => {
+  const user = await authRepository.findUserByEmail(email);
 
-    if (!user) {
-        throw new AppError('Email hoặc mật khẩu không đúng', 400);
-    }
+  if (!user) {
+    throw new AppError("Email hoặc mật khẩu không đúng", 400);
+  }
 
-    const isMatch = await bycrypt.compare(password, user.password);
+  const isMatch = await bycrypt.compare(password, user.password);
 
-    if (!isMatch) {
-        throw new AppError('Email hoặc mật khẩu không đúng', 400);
-    }
+  if (!isMatch) {
+    throw new AppError("Email hoặc mật khẩu không đúng", 400);
+  }
 
-    const accessToken = jwt.sign(
-        { userId: user.id }, 
-        process.env.ACCESS_TOKEN_SECRET, 
-        { expiresIn: '15m' }
-    );
+  const accessToken = signAccessToken(user.id);
 
-    const refreshToken = crypto.randomBytes(64).toString("hex");
+  const refreshToken = crypto.randomBytes(64).toString("hex");
 
-    await authRepository.saveSession(user.id, refreshToken);
+  await authRepository.saveSession(user.id, refreshToken);
 
-    return {
-        accessToken,
-        refreshToken,
-        user: {
-            id: user.id,
-            fullName: user.full_name,
-            email: user.email,
-            role: user.role,
-        },
-    }
+  return {
+    accessToken,
+    refreshToken,
+    user: {
+      id: user.id,
+      fullName: user.full_name,
+      email: user.email,
+      role: user.role,
+    },
+  };
 };
 
 // Xử lý nghiệp vụ cấp lại Access Token.
-export const refresh = async () => {};
+export const refresh = async (refreshToken) => {
+  const session = await authRepository.findSessionByToken(refreshToken);
+
+  if (!session) {
+    throw new AppError("Refresh token không hợp lệ hoặc đã hết hạn", 400);
+  }
+
+  const accessToken = signAccessToken(session.user_id);
+
+  return { accessToken };
+};
 
 // Xử lý nghiệp vụ đăng xuất.
-export const logout = async ({ refreshToken }) => {
-    const deleted = await authRepository.deleteSession(refreshToken);
+export const logout = async (refreshToken) => {
+  // Không có cookie thì xem như đã đăng xuất, tránh truyền undefined xuống MySQL.
+  if (typeof refreshToken !== 'string' || !refreshToken) {
+    return;
+  }
 
-    if (!deleted) {
-        throw new AppError('Phiên đăng nhập không tồn tại hoặc đã hết hạn', 400);
-    }
+  // Session đã bị xóa vẫn xem là thành công để có thể đăng xuất nhiều lần.
+  // Lỗi kết nối hoặc truy vấn DB vẫn được chuyển lên controller.
+  await authRepository.deleteSession(refreshToken);
 };
 
 // Xử lý nghiệp vụ lấy thông tin người dùng đang đăng nhập.
 export const me = async (userId) => {
-    const user = await authRepository.findUserById(userId);
+  const user = await authRepository.findUserById(userId);
 
-    if (!user) {
-        throw new AppError('Tài khoản không còn tồn tại', 401);
-    }
+  if (!user) {
+    throw new AppError("Tài khoản không còn tồn tại", 401);
+  }
 
-    // Chỉ trả những thông tin cần thiết, không trả password hash.
-    return {
-        id: user.id,
-        fullName: user.full_name,
-        email: user.email,
-        role: user.role,
-    };
+  // Chỉ trả những thông tin cần thiết, không trả password hash.
+  return {
+    id: user.id,
+    fullName: user.full_name,
+    email: user.email,
+    role: user.role,
+  };
 };

@@ -30,7 +30,13 @@ export const saveSession = async (userId, refreshToken) => {
 };
 
 // Tìm phiên đăng nhập còn hạn theo Refresh Token.
-export const findSessionByToken = async (refreshToken) => {};
+export const findSessionByToken = async (refreshToken) => {
+    const [session] = await pool.execute(
+        'SELECT * FROM sessions WHERE refresh_token = ? AND expires_at > NOW()',
+        [refreshToken]
+    );
+    return session[0];
+};
 
 // Xóa phiên đăng nhập theo Refresh Token.
 export const deleteSession = async (refreshToken) => {

@@ -24,3 +24,6 @@ export const createSection = async (req, res) => {};
 
 // Thêm bài giảng video vào chương.
 export const createLesson = async (req, res) => {};
+
+// Trả thông tin video bài giảng cho người có quyền xem.
+export const getLessonVideo = async (req, res) => {};
