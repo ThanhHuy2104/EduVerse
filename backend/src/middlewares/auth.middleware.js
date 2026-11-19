@@ -1,5 +1,6 @@
 ﻿import { verifyAccessToken } from '../utils/jwt.util.js';
-
+import * as courseRepository from '../modules/auth/auth.repository.js'
+import { AppError } from '../utils/appError.util.js';
 import db from '../config/db.js';
 
 export const protectedAuth = async (req, res, next) => {
@@ -54,3 +55,24 @@ export const adminRole = (req, res, next) => {
         return res.status(500).json({message: "Lỗi hệ thống"})
     }
 }
+
+export const courseOwnerOrAdmin = async (req, res, next) => {
+    try {
+        const course = await courseRepository.getCourseOwner(req.params.id);
+
+        if (!course) {
+            return next(new AppError('Không tìm thấy khóa học', 404));
+        }
+
+        const isOwner = course.author_id === req.userId;
+        const isAdmin = req.user.role === 'ADMIN';
+
+        if (isOwner || isAdmin) {
+            return next();
+        }
+
+        return next(new AppError('Bạn không có quyền sửa khóa học này', 403));
+    } catch (error) {
+        return next(error);
+    }
+};

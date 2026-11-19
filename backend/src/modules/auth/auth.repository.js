@@ -46,3 +46,12 @@ export const deleteSession = async (refreshToken) => {
     );
     return result.affectedRows > 0;
 };
+
+export const getCourseOwner = async (courseId) => {
+    const [rows] = await pool.query(
+        'SELECT author_id FROM courses WHERE id = ?',
+        [courseId],
+    );
+
+    return rows[0];
+};

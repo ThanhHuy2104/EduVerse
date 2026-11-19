@@ -1,6 +1,15 @@
 import express from 'express';
 import * as courseController from './course.controller.js';
 import { protectedAuth } from '../../middlewares/auth.middleware.js';
+import { adminRole } from '../../middlewares/auth.middleware.js';
+import { validate } from '../../middlewares/validate.middleware.js';
+import { courseOwnerOrAdmin } from '../../middlewares/auth.middleware.js';
+import {
+    createCourseSchema,
+    updateCourseSchema,
+    createSectionSchema,
+    createLessonSchema,
+} from '../../validators/course.schema.js';
 
 const router = express.Router();
 
@@ -11,19 +20,19 @@ router.get('/', courseController.getCourses);
 router.get('/:id', courseController.getCourseById);
 
 // Tạo khóa học mới với trạng thái mặc định PENDING. Quyền: người dùng / quản trị viên.
-router.post('/', courseController.createCourse);
+router.post('/', protectedAuth, validate(createCourseSchema), courseController.createCourse);
 
 // Cập nhật thông tin khóa học. Quyền: chủ khóa học / quản trị viên.
-router.patch('/:id', courseController.updateCourse);
+router.patch('/:id', protectedAuth, courseOwnerOrAdmin, validate(updateCourseSchema), courseController.updateCourse);
 
 // Duyệt khóa học lên sàn, chuyển trạng thái thành APPROVED. Quyền: quản trị viên.
-router.patch('/:id/approve', courseController.approveCourse);
+router.patch('/:id/approve', protectedAuth, adminRole, courseController.approveCourse);
 
 // Thêm chương mới vào khóa học. Quyền: chủ khóa học / quản trị viên.
-router.post('/:courseId/sections', courseController.createSection);
+router.post('/:courseId/sections', protectedAuth, courseOwnerOrAdmin, validate(createSectionSchema), courseController.createSection);
 
 // Thêm bài giảng video vào chương. Quyền: chủ khóa học / quản trị viên.
-router.post('/sections/:sectionId/lessons', courseController.createLesson);
+router.post('/sections/:sectionId/lessons', protectedAuth, courseOwnerOrAdmin, validate(createLessonSchema), courseController.createLesson);
 
 // Lấy video bài giảng. Cần đăng nhập; kiểm tra quyền mua sẽ được triển khai trong service.
 router.get('/lessons/:lessonId/video', protectedAuth, courseController.getLessonVideo);
