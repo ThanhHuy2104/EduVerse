@@ -17,16 +17,16 @@ const router = express.Router();
 router.get('/', courseController.getCourses);
 
 // Xem chi tiết khóa học cùng danh sách chương và bài học. Quyền: công khai.
-router.get('/:id', courseController.getCourseById);
+router.get('/:courseId', courseController.getCourseById);
 
 // Tạo khóa học mới với trạng thái mặc định PENDING. Quyền: người dùng / quản trị viên.
 router.post('/', protectedAuth, validate(createCourseSchema), courseController.createCourse);
 
 // Cập nhật thông tin khóa học. Quyền: chủ khóa học / quản trị viên.
-router.patch('/:id', protectedAuth, courseOwnerOrAdmin, validate(updateCourseSchema), courseController.updateCourse);
+router.patch('/:courseId', protectedAuth, courseOwnerOrAdmin, validate(updateCourseSchema), courseController.updateCourse);
 
 // Duyệt khóa học lên sàn, chuyển trạng thái thành APPROVED. Quyền: quản trị viên.
-router.patch('/:id/approve', protectedAuth, adminRole, courseController.approveCourse);
+router.patch('/:courseId/approve', protectedAuth, adminRole, courseController.approveCourse);
 
 // Thêm chương mới vào khóa học. Quyền: chủ khóa học / quản trị viên.
 router.post('/:courseId/sections', protectedAuth, courseOwnerOrAdmin, validate(createSectionSchema), courseController.createSection);
@@ -34,7 +34,7 @@ router.post('/:courseId/sections', protectedAuth, courseOwnerOrAdmin, validate(c
 // Thêm bài giảng video vào chương. Quyền: chủ khóa học / quản trị viên.
 router.post('/sections/:sectionId/lessons', protectedAuth, courseOwnerOrAdmin, validate(createLessonSchema), courseController.createLesson);
 
-// Lấy video bài giảng. Cần đăng nhập; kiểm tra quyền mua sẽ được triển khai trong service.
+// Lấy video bài giảng cho người dùng đã đăng ký khóa học.
 router.get('/lessons/:lessonId/video', protectedAuth, courseController.getLessonVideo);
 
 export default router;

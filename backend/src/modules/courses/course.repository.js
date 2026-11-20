@@ -9,16 +9,16 @@ export const getCourses = async () => {
 };
 
 // Lấy chi tiết khóa học cùng chương và bài học.
-export const getCourseById = async (id) => {
+export const getCourseById = async (courseId) => {
   const [courses] = await pool.query(
     "SELECT * FROM courses WHERE id = ? AND status = 'APPROVED'", 
-    [id]);
+    [courseId]);
   const course = courses[0];
   if (!course) return null;
   
   const [sections] = await pool.query(
     "SELECT * FROM sections WHERE course_id = ? ORDER BY order_index, id", 
-    [id]
+    [courseId]
   );
 
   const [lessons] = await pool.query(
@@ -27,7 +27,7 @@ export const getCourseById = async (id) => {
     JOIN sections AS s ON s.id = l.section_id
     WHERE s.course_id = ?
     ORDER BY l.order_index, l.id`, 
-    [id]
+    [courseId]
   );
 
   return {
@@ -45,19 +45,19 @@ export const createCourse = async (courseData) => {
 };
 
 // Cập nhật thông tin khóa học.
-export const updateCourse = async (id, courseData) => {
+export const updateCourse = async (courseId, courseData) => {
   const [result] = await pool.query("UPDATE courses SET ? WHERE id = ?", [
     courseData,
-    id,
+    courseId,
   ]);
   return result;
 };
 
 // Duyệt khóa học sang trạng thái APPROVED.
-export const approveCourse = async (id) => {
+export const approveCourse = async (courseId) => {
   const [result] = await pool.query(
     'UPDATE courses SET status = "APPROVED" WHERE id = ?',
-    [id],
+    [courseId],
   );
   return result;
 };

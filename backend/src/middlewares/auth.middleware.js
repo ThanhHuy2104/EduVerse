@@ -1,5 +1,5 @@
 ﻿import { verifyAccessToken } from '../utils/jwt.util.js';
-import * as courseRepository from '../modules/auth/auth.repository.js'
+import { getCourseOwner, getCourseOwnerBySectionId } from '../modules/auth/auth.repository.js';
 import { AppError } from '../utils/appError.util.js';
 import db from '../config/db.js';
 
@@ -58,10 +58,14 @@ export const adminRole = (req, res, next) => {
 
 export const courseOwnerOrAdmin = async (req, res, next) => {
     try {
-        const course = await courseRepository.getCourseOwner(req.params.id);
+        const { courseId, sectionId } = req.params;
+        const course = sectionId === undefined
+            ? await getCourseOwner(courseId)
+            : await getCourseOwnerBySectionId(sectionId);
 
         if (!course) {
-            return next(new AppError('Không tìm thấy khóa học', 404));
+            const message = sectionId === undefined ? 'Không tìm thấy khóa học' : 'Không tìm thấy chương';
+            return next(new AppError(message, 404));
         }
 
         const isOwner = course.author_id === req.userId;

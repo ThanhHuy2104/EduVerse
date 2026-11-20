@@ -10,8 +10,7 @@ export const createCourseSchema = z.object({
     price: z.number().min(0, "Giá khóa học không được âm").max(99999999.99).optional(),
     // Có thể bỏ qua hoặc gửi null. Nếu gửi chuỗi thì tối đa 255 ký tự sau khi trim.
     thumbnail_url: z.string().trim().max(255).nullish(),
-    // ID tác giả và danh mục phải là số nguyên dương. Khóa ngoại kiểm tra ID có tồn tại.
-    author_id: z.number().int().positive(),
+    // ID danh mục phải là số nguyên dương. ID tác giả lấy từ tài khoản đăng nhập.
     category_id: z.number().int().positive(),
 })
 

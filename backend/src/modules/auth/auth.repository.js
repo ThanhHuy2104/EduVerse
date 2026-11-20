@@ -55,3 +55,15 @@ export const getCourseOwner = async (courseId) => {
 
     return rows[0];
 };
+
+export const getCourseOwnerBySectionId = async (sectionId) => {
+    const [rows] = await pool.query(
+        `SELECT c.author_id
+         FROM sections AS s
+         JOIN courses AS c ON c.id = s.course_id
+         WHERE s.id = ?`,
+        [sectionId],
+    );
+
+    return rows[0];
+};

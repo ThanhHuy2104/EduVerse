@@ -5,8 +5,8 @@ export const getCourses = async () => {
 };
 
 // Lấy chi tiết khóa học cùng chương và bài học.
-export const getCourseById = async (id) => {
-    return await courseRepository.getCourseById(id);
+export const getCourseById = async (courseId) => {
+    return await courseRepository.getCourseById(courseId);
 };
 
 // Tạo khóa học mới với trạng thái PENDING.
@@ -15,13 +15,13 @@ export const createCourse = async (courseData) => {
 };
 
 // Cập nhật thông tin khóa học.
-export const updateCourse = async (id, courseData) => {
-    return await courseRepository.updateCourse(id, courseData);
+export const updateCourse = async (courseId, courseData) => {
+    return await courseRepository.updateCourse(courseId, courseData);
 };
 
 // Duyệt khóa học sang trạng thái APPROVED.
-export const approveCourse = async (id) => {
-    return await courseRepository.approveCourse(id);
+export const approveCourse = async (courseId) => {
+    return await courseRepository.approveCourse(courseId);
 };
 
 // Thêm chương mới vào khóa học.
