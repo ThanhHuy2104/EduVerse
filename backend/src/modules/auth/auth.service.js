@@ -47,7 +47,7 @@ export const signin = async ({ email, password }) => {
 
   const accessToken = signAccessToken(user.id);
 
-  const refreshToken = crypto.randomBytes(64).toString("hex");
+  const refreshToken = process.env.REFRESH_TOKEN_SECRET;
 
   await authRepository.saveSession(user.id, refreshToken);
 
@@ -86,21 +86,4 @@ export const logout = async (refreshToken) => {
   // Session đã bị xóa vẫn xem là thành công để có thể đăng xuất nhiều lần.
   // Lỗi kết nối hoặc truy vấn DB vẫn được chuyển lên controller.
   await authRepository.deleteSession(refreshToken);
-};
-
-// Xử lý nghiệp vụ lấy thông tin người dùng đang đăng nhập.
-export const me = async (userId) => {
-  const user = await authRepository.findUserById(userId);
-
-  if (!user) {
-    throw new AppError("Tài khoản không còn tồn tại", 401);
-  }
-
-  // Chỉ trả những thông tin cần thiết, không trả password hash.
-  return {
-    id: user.id,
-    fullName: user.full_name,
-    email: user.email,
-    role: user.role,
-  };
 };

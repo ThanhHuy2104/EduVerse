@@ -80,16 +80,3 @@ export const logout = async (req, res, next) => {
         return next(error);
     }
 };
-
-// Lấy thông tin người dùng đang đăng nhập.
-export const me = async (req, res, next) => {
-    try {
-        const user = await authService.me(req.userId);
-        return res.status(200).json({
-            status: 'success',
-            data: user,
-        });
-    } catch (error) {
-        return next(error);
-    }
-};

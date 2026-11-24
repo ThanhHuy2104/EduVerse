@@ -5,12 +5,6 @@ export const findUserByEmail = async (email) => {
     return emailResult[0];
 };
 
-// Tìm người dùng theo ID.
-export const findUserById = async (id) => {
-    const [user] = await pool.execute('SELECT * FROM users WHERE id = ?', [id]);
-    return user[0];
-};
-
 // Tạo người dùng mới.
 export const createUser = async ({ email, password, fullName }) => {
     const [result] = await pool.execute(

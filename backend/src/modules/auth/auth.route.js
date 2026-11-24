@@ -2,7 +2,6 @@ import express from 'express';
 import * as authController from './auth.controller.js';
 import { validate } from '../../middlewares/validate.middleware.js';
 import { signUpSchema, signInSchema } from '../../validators/auth.schema.js';
-import { protectedAuth } from '../../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
@@ -17,8 +16,5 @@ router.post('/refresh', authController.refresh);
 
 // Đăng xuất, xóa session trong DB và xóa Cookie. Quyền: người dùng / quản trị viên.
 router.post('/logout', authController.logout);
-
-// Lấy thông tin người dùng đang đăng nhập. Quyền: người dùng / quản trị viên.
-router.get('/me', protectedAuth, authController.me);
 
 export default router;

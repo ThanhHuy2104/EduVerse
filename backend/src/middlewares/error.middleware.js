@@ -8,7 +8,7 @@ export const errorMiddleware = (err, req, res, next) => {
   }
 
   // Ưu tiên statusCode; nếu không có thì thử status do thư viện khác cung cấp.
-  const code = err.statusCode || err.status;
+  const code = err.statusCode;
   // Chỉ chấp nhận mã lỗi HTTP là số nguyên từ 400 đến 599.
   const statusCode = Number.isInteger(code) && code >= 400 && code <= 599
     // Nếu mã hợp lệ thì dùng mã đó.
