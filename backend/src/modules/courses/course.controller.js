@@ -4,7 +4,7 @@ import * as courseService from './course.service.js';
 export const getCourses = async (req, res, next) => {
     try {
         const courses = await courseService.getCourses();
-        res.json(courses);
+        res.json({ status: 'success', data: courses });
     } catch (error) {
         next(error);
     }
@@ -13,12 +13,14 @@ export const getCourses = async (req, res, next) => {
 // Lấy chi tiết khóa học cùng chương và bài học.
 export const getCourseById = async (req, res, next) => {
     try {
-        const courseId = req.params.courseId;
-        const courseData = await courseService.getCourseById(courseId);
-        if (!courseData) {
-            return res.status(404).json({ message: 'Course not found' });
+        const courseId = Number(req.params.courseId);
+        if (!Number.isSafeInteger(courseId) || courseId < 1) {
+            return res
+                .status(400)
+                .json({ status: 'fail', message: 'ID khóa học không hợp lệ.' });
         }
-        res.json(courseData);
+        const courseData = await courseService.getCourseById(courseId);
+        res.json({ status: 'success', data: courseData });
     } catch (error) {
         next(error);
     }
@@ -28,7 +30,7 @@ export const getCourseById = async (req, res, next) => {
 export const createCourse = async (req, res, next) => {
     try {
         const course = await courseService.createCourse({...req.body, author_id: req.userId});
-        res.status(201).json(course);
+        res.status(201).json({ status: 'success', data: course });
     } catch (error) {
         next(error);
     }
@@ -37,10 +39,15 @@ export const createCourse = async (req, res, next) => {
 // Cập nhật thông tin khóa học.
 export const updateCourse = async (req, res, next) => {
     try {
-        const courseId = req.params.courseId;
+        const courseId = Number(req.params.courseId);
+        if (!Number.isSafeInteger(courseId) || courseId < 1) {
+            return res
+                .status(400)
+                .json({ status: 'fail', message: 'ID khóa học không hợp lệ.' });
+        }
         const courseData = req.body;
         const course = await courseService.updateCourse(courseId, courseData);
-        res.json(course);
+        res.json({ status: 'success', data: course });
     } catch (error) {
         next(error);
     }
@@ -49,9 +56,14 @@ export const updateCourse = async (req, res, next) => {
 // Duyệt khóa học sang trạng thái APPROVED.
 export const approveCourse = async (req, res, next) => {
     try {
-        const courseId = req.params.courseId;
+        const courseId = Number(req.params.courseId);
+        if (!Number.isSafeInteger(courseId) || courseId < 1) {
+            return res
+                .status(400)
+                .json({ status: 'fail', message: 'ID khóa học không hợp lệ.' });
+        }
         const course = await courseService.approveCourse(courseId);
-        res.json(course);
+        res.json({ status: 'success', data: course });
     } catch (error) {
         next(error);
     }
@@ -60,10 +72,15 @@ export const approveCourse = async (req, res, next) => {
 // Thêm chương mới vào khóa học.
 export const createSection = async (req, res, next) => {
     try {
-        const courseId = req.params.courseId;
+        const courseId = Number(req.params.courseId);
+        if (!Number.isSafeInteger(courseId) || courseId < 1) {
+            return res
+                .status(400)
+                .json({ status: 'fail', message: 'ID khóa học không hợp lệ.' });
+        }
         const sectionData = req.body;
         const section = await courseService.createSection(courseId, sectionData);
-        res.status(201).json(section);
+        res.status(201).json({ status: 'success', data: section });
     } catch (error) {
         next(error);
     }
@@ -72,10 +89,15 @@ export const createSection = async (req, res, next) => {
 // Thêm bài giảng video vào chương.
 export const createLesson = async (req, res, next) => {
     try {
-        const sectionId = req.params.sectionId;
+        const sectionId = Number(req.params.sectionId);
+        if (!Number.isSafeInteger(sectionId) || sectionId < 1) {
+            return res
+                .status(400)
+                .json({ status: 'fail', message: 'ID chương không hợp lệ.' });
+        }
         const lessonData = req.body;
         const lesson = await courseService.createLesson(sectionId, lessonData);
-        res.status(201).json(lesson);
+        res.status(201).json({ status: 'success', data: lesson });
     } catch (error) {
         next(error);
     }
@@ -84,16 +106,15 @@ export const createLesson = async (req, res, next) => {
 // Trả thông tin video bài giảng cho người có quyền xem.
 export const getLessonVideo = async (req, res, next) => {
     try {
-        const lessonId = req.params.lessonId;
+        const lessonId = Number(req.params.lessonId);
+        if (!Number.isSafeInteger(lessonId) || lessonId < 1) {
+            return res
+                .status(400)
+                .json({ status: 'fail', message: 'ID bài giảng không hợp lệ.' });
+        }
         const userId = req.userId;
         const lessonVideo = await courseService.getLessonVideo(userId, lessonId);
-        if (!lessonVideo) {
-            return res.status(404).json({ message: 'Lesson not found' });
-        }
-        if (lessonVideo.enrolled_user_id !== userId) {
-            return res.status(403).json({ message: 'Bạn chưa đăng ký khóa học này' });
-        }
-        res.json({ video_url: lessonVideo.video_url });
+        res.json({ status: 'success', data: { video_url: lessonVideo.video_url } });
     } catch (error) {
         next(error);
     }
